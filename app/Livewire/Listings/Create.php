@@ -84,7 +84,7 @@ class Create extends Component
         ]);
 
         session()->flash('status', __('Listing created'));
-        return redirect()->route('listings.index');
+        return redirect()->route('dashboard');
     }
 
     public function render()

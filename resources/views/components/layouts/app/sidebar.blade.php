@@ -8,25 +8,29 @@
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
             <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+
                 <x-app-logo />
             </a>
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    <flux:navlist.item class="mb-2" icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    <flux:navlist.item class="mb-2" icon="plus" :href="route('listings.create')" :current="request()->routeIs('listings.create')" wire:navigate>{{ __('Create listing') }}</flux:navlist.item>
+                    <flux:navlist.item class="mb-2" icon="archive-box" :href="route('listings.mine')" :current="request()->routeIs('listings.mine')" wire:navigate>{{ __('My listings') }}</flux:navlist.item>
+                    <flux:navlist.item class="mb-2" icon="academic-cap" :href="route('settings.skills')" :current="request()->routeIs('settings.skills')" wire:navigate>{{ __('My skills') }}</flux:navlist.item>
+                    <flux:navlist.item class="mb-2" icon="chat-bubble-left-right" :href="route('listings.create')" :current="request()->routeIs('listings.create')" wire:navigate>{{ __('Chat') }}</flux:navlist.item>
+                    <flux:navlist.item class="mb-2" icon="cog-6-tooth" :href="route('profile.edit')" :current="request()->routeIs('profile.edit')" wire:navigate>{{ __('Settings') }}</flux:navlist.item>
+
                 </flux:navlist.group>
             </flux:navlist>
 
             <flux:spacer />
 
             <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
+                <flux:navlist.item icon="folder-git-2" href="https://github.com/ParsaMozouni/TradeMySkill" target="_blank">
                 {{ __('Repository') }}
                 </flux:navlist.item>
 
-                <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
-                </flux:navlist.item>
             </flux:navlist>
 
             <!-- Desktop User Menu -->

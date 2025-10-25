@@ -1,44 +1,57 @@
 // resources/js/map-picker.js
 
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
-// ✅ Fix marker icon issue with Vite (required!)
+// Fix marker icon paths when using Vite
 import icon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
+import icon    from "leaflet/dist/images/marker-icon.png";
+import shadow  from "leaflet/dist/images/marker-shadow.png";
 
-import shadow from "leaflet/dist/images/marker-shadow.png";
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: icon2x,
-    iconUrl: markerIcon,
+    iconUrl: icon,
     shadowUrl: shadow,
 });
 
+/* ===========================
+   SIGNUP: DRAGGABLE PICKER
+   data-map-picker
+   =========================== */
+
 function initMapPicker(el) {
-    if (!el || el.__mapInited) return;
-    el.__mapInited = true;
+    if (!el || el.__mapPickerInited) return;
+    el.__mapPickerInited = true;
 
+    // Regina defaults
     const startLat = parseFloat(el.dataset.lat || "50.4452");
-    const startLng = parseFloat(el.dataset.lng || "104.6189");
-    const latSel = el.dataset.latTarget;
-    const lngSel = el.dataset.lngTarget;
-    const locateBtnSel = el.dataset.locateBtn;
+    const startLng = parseFloat(el.dataset.lng || "-104.6189"); // fixed: negative
 
-    const latInput = document.querySelector(latSel);
-    const lngInput = document.querySelector(lngSel);
+    const latSel      = el.dataset.latTarget;  // e.g. "[data-lat-input]"
+    const lngSel      = el.dataset.lngTarget;  // e.g. "[data-lng-input]"
+    const locateBtnSel= el.dataset.locateBtn;  // e.g. "#use-my-location"
+
+    const latInput = latSel ? document.querySelector(latSel) : null;
+    const lngInput = lngSel ? document.querySelector(lngSel) : null;
 
     const map = L.map(el, { zoomControl: true }).setView([startLat, startLng], 11);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
         maxZoom: 19,
     }).addTo(map);
 
     const marker = L.marker([startLat, startLng], { draggable: true }).addTo(map);
 
     function setLatLng(lat, lng) {
-        if (latInput) { latInput.value = Number(lat).toFixed(6); latInput.dispatchEvent(new Event("input", { bubbles: true })); }
-        if (lngInput) { lngInput.value = Number(lng).toFixed(6); lngInput.dispatchEvent(new Event("input", { bubbles: true })); }
+        if (latInput) {
+            latInput.value = Number(lat).toFixed(6);
+            latInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        if (lngInput) {
+            lngInput.value = Number(lng).toFixed(6);
+            lngInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
     }
 
     marker.on("dragend", () => {
@@ -54,7 +67,7 @@ function initMapPicker(el) {
 
     map.whenReady(() => {
         map.invalidateSize();
-        setTimeout(() => map.invalidateSize(), 100);
+        setTimeout(() => map.invalidateSize(), 80);
     });
 
     if (locateBtnSel) {
@@ -71,30 +84,96 @@ function initMapPicker(el) {
     }
 }
 
-function bootAll() {
+function bootPickers() {
     document.querySelectorAll("[data-map-picker]").forEach(initMapPicker);
 }
 
+/* ===========================
+   LISTINGS MODAL: READONLY VIEW
+   data-map-view
+   =========================== */
+
+function initMapView(el) {
+    if (!el || el.__mapViewInited) return;
+    el.__mapViewInited = true;
+
+    const lat    = parseFloat(el.dataset.lat || "0");
+    const lng    = parseFloat(el.dataset.lng || "0");
+    const radius = parseInt(el.dataset.radius || "1500", 10);
+
+    if (Number.isNaN(lat) || Number.isNaN(lng) || (lat === 0 && lng === 0)) return;
+
+    const map = L.map(el, { zoomControl: true, attributionControl: true })
+        .setView([lat, lng], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OSM",
+        maxZoom: 19,
+    }).addTo(map);
+
+    // Privacy circle only (no exact marker)
+    L.circle([lat, lng], {
+        radius,
+        weight: 1,
+        fillOpacity: 0.15,
+    }).addTo(map);
+
+    map.whenReady(() => {
+        map.invalidateSize();
+        setTimeout(() => map.invalidateSize(), 50);
+    });
+}
+
+function bootViews() {
+    document.querySelectorAll("[data-map-view]").forEach(initMapView);
+}
+
+/* ===========================
+   BOOTSTRAP HOOKS
+   =========================== */
+
 // First load
-document.addEventListener("DOMContentLoaded", bootAll);
+document.addEventListener("DOMContentLoaded", () => {
+    bootPickers();
+    bootViews();
+});
 
-// Livewire v3 hooks (cover different lifecycles)
-document.addEventListener("livewire:load", bootAll);
-document.addEventListener("livewire:init", bootAll);
-document.addEventListener("livewire:navigated", bootAll);
+// Livewire lifecycles
+document.addEventListener("livewire:load", () => {
+    bootPickers();
+    bootViews();
+});
+document.addEventListener("livewire:init", () => {
+    bootPickers();
+    bootViews();
+});
+document.addEventListener("livewire:navigated", () => {
+    bootPickers();
+    bootViews();
+});
 
-// Custom event from your component when switching to step 2
-document.addEventListener("map:init", bootAll);
+// Custom events from components
+// - Signup step 2 triggers this (picker)
+document.addEventListener("map:init", bootPickers);
+// - Listings modal triggers this (viewer)
+document.addEventListener("detail-map:init", bootViews);
 
-// Fallback: observe DOM mutations (handles partial re-renders)
+// MutationObserver fallback (handles partial renders)
 const mo = new MutationObserver((muts) => {
     for (const m of muts) {
         if (m.addedNodes?.length) {
             for (const n of m.addedNodes) {
-                if (n.nodeType === 1 && n.matches?.("[data-map-picker]")) {
+                if (n.nodeType !== 1) continue;
+
+                if (n.matches?.("[data-map-picker]")) {
                     initMapPicker(n);
-                } else if (n.querySelectorAll) {
+                } else if (n.matches?.("[data-map-view]")) {
+                    initMapView(n);
+                }
+
+                if (n.querySelectorAll) {
                     n.querySelectorAll("[data-map-picker]").forEach(initMapPicker);
+                    n.querySelectorAll("[data-map-view]").forEach(initMapView);
                 }
             }
         }

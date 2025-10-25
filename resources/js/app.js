@@ -1,1 +1,2 @@
-import './map-picker'; // add this line
+import './map-picker';
+import 'leaflet/dist/leaflet.css';

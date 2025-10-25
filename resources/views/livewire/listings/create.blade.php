@@ -108,7 +108,7 @@
 
             {{-- Actions --}}
             <div class="md:col-span-2 flex items-center justify-end gap-3">
-                <a href="{{ route('listings.index') }}" class="rounded-lg border px-4 py-2 text-sm">
+                <a href="{{ route('dashboard') }}" class="rounded-lg border px-4 py-2 text-sm">
                     {{ __('Cancel') }}
                 </a>
                 <button type="submit" class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white">

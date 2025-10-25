@@ -24,6 +24,24 @@ class Index extends Component
     public bool $treeOpen = false;           // dropdown open/close
     public array $expanded = [];             // [parentId => true]
 
+    /** Details modal state */
+    public bool $detailsOpen = false;
+    public ?int $viewingId   = null;
+
+    /** Data shown in the details modal */
+    public array $detail = [
+        'listing_id'   => null,
+        'user_id'      => null,
+        'user_name'    => null,
+        'user_skills'  => [],   // [['name'=>..., 'emoji'=>...], ...]
+        'desired'      => ['name' => null, 'emoji' => null, 'parent' => null],
+        'description'  => null,
+        'location'     => null,
+        'lat'          => null, // approximate/fuzzed
+        'lng'          => null, // approximate/fuzzed
+        'radius_m'     => 1500, // circle radius (1.5km)
+    ];
+
     public function mount(): void
     {
         // Build parent + children tree
@@ -122,31 +140,93 @@ class Index extends Component
         return [(int) $node->id];
     }
 
+    /* ------------------- Details modal logic ------------------ */
+
+    public function openDetails(int $listingId): void
+    {
+        $listing = Listing::query()
+            ->with(['user.skills', 'desiredSkill.parent'])
+            ->findOrFail($listingId);
+
+        $this->detail = [
+            'listing_id'  => $listing->id,
+            'user_id'     => $listing->user->id,
+            'user_name'   => $listing->user->name,
+            'user_skills' => $listing->user->skills
+                ->map(fn($s) => ['name' => $s->name, 'emoji' => $s->emoji])
+                ->values()
+                ->all(),
+            'desired'     => [
+                'name'   => $listing->desiredSkill?->name,
+                'emoji'  => $listing->desiredSkill?->emoji,
+                'parent' => $listing->desiredSkill?->parent?->name,
+            ],
+            'description' => $listing->description,
+            'location'    => $listing->user->location ?: null,
+
+            // Privacy: round coords and show a circle
+            'lat'       => $this->approximateLat($listing->user->lat),
+            'lng'       => $this->approximateLng($listing->user->lng, $listing->user->lat),
+            'radius_m'  => 1500,
+        ];
+
+        $this->viewingId   = $listing->id;
+        $this->detailsOpen = true;
+
+        // Fire event for Leaflet readonly map boot
+        $this->dispatch('detail-map:init');
+    }
+
+    public function closeDetails(): void
+    {
+        $this->reset(['detailsOpen', 'viewingId', 'detail']);
+        $this->detail = [
+            'listing_id' => null,'user_id'=>null,'user_name'=>null,'user_skills'=>[],
+            'desired'=>['name'=>null,'emoji'=>null,'parent'=>null],
+            'description'=>null,'location'=>null,'lat'=>null,'lng'=>null,'radius_m'=>1500,
+        ];
+    }
+
+    /** Round latitude to ~0.01° (~1.1km at equator) */
+    private function approximateLat(?float $lat): ?float
+    {
+        if ($lat === null) return null;
+        return round($lat, 2);
+    }
+
+    /** Round longitude similarly (2 decimals is coarse) */
+    private function approximateLng(?float $lng, ?float $lat): ?float
+    {
+        if ($lng === null) return null;
+        return round($lng, 2);
+    }
+
     /* ------------------------ Render -------------------------- */
 
     public function render()
     {
         $user = auth()->user();
+        $me   = auth()->id();
 
-        // Viewer’s own skills for "match my skills"
         $mySkillIds = $user
             ? $user->skills()->pluck('skills.id')->map(fn ($v) => (int) $v)
             : collect();
 
         $q = trim(mb_strtolower($this->q));
-        $ownerAllowedSkillIds = $this->allowedSkillIds(); // filter on listing owner's skills
+        $ownerAllowedSkillIds = $this->allowedSkillIds();
 
         $listings = Listing::query()
-            ->with(['user.skills', 'desiredSkill.parent'])
+            ->with(['user.skills','desiredSkill.parent'])
 
-            // Filter by LISTING OWNER'S skills (tree-aware)
+            // Exclude my own listings
+            ->when($me, fn ($qr) => $qr->where('user_id', '!=', $me))
+
+            // Filter by LISTING OWNER’S skills (tree-aware)
             ->when($this->categoryId && !empty($ownerAllowedSkillIds), function ($qr) use ($ownerAllowedSkillIds) {
-                $qr->whereHas('user.skills', function ($qs) use ($ownerAllowedSkillIds) {
-                    $qs->whereIn('skills.id', $ownerAllowedSkillIds);
-                });
+                $qr->whereHas('user.skills', fn ($qs) => $qs->whereIn('skills.id', $ownerAllowedSkillIds));
             })
 
-            // Search in description, desired skill, or user name
+            // Search
             ->when($q !== '', function ($qr) use ($q) {
                 $qr->where(function ($sub) use ($q) {
                     $sub->whereRaw('LOWER(description) LIKE ?', ['%'.$q.'%'])
@@ -155,10 +235,8 @@ class Index extends Component
                 });
             })
 
-            // Show listings that seek skills I have
-            ->when($this->matchMySkills && $mySkillIds->isNotEmpty(), function ($qr) use ($mySkillIds) {
-                $qr->whereIn('desired_skill_id', $mySkillIds);
-            })
+            // Match my skills
+            ->when($this->matchMySkills && $mySkillIds->isNotEmpty(), fn ($qr) => $qr->whereIn('desired_skill_id', $mySkillIds))
 
             ->latest()
             ->paginate($this->perPage);
