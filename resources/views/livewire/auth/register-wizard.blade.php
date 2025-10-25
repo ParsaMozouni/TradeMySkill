@@ -17,15 +17,12 @@
     @if ($step === 1)
         <form wire:submit.prevent="next" class="flex flex-col gap-6">
             <flux:input name="name" :label="__('Name')" type="text" wire:model.defer="name" required autofocus autocomplete="name" :placeholder="__('Full name')" />
-            @error('name') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
 
             <flux:input name="email" :label="__('Email address')" type="email" wire:model.defer="email" required autocomplete="email" placeholder="email@example.com" />
-            @error('email') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
 
             <div class="grid gap-6 sm:grid-cols-2">
                 <div>
                     <flux:input name="password" :label="__('Password')" type="password" wire:model.defer="password" required autocomplete="new-password" :placeholder="__('Password')" viewable />
-                    @error('password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <flux:input name="password_confirmation" :label="__('Confirm password')" type="password" wire:model.defer="password_confirmation" required autocomplete="new-password" :placeholder="__('Confirm password')" viewable />
@@ -41,6 +38,32 @@
     {{-- STEP 2: Location --}}
     @if ($step === 2)
         <div class="flex flex-col gap-6">
+            <div class="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4">
+                <h3 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                    Why we ask for your location
+                </h3>
+
+                <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                    We use an <strong>approximate</strong> location to match you with nearby people for quicker, more convenient meetups.
+                    Your <strong>exact address is never shared</strong>.
+                </p>
+
+                <ul class="mt-3 space-y-1.5 text-sm text-neutral-600 dark:text-neutral-300">
+                    <li class="flex gap-2">
+                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500"></span>
+                        Better matches with people close to you
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500"></span>
+                        Easier to coordinate time and place
+                    </li>
+
+                </ul>
+
+                <p class="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+                    You can move the map pin to a nearby landmark or choose a broad area for extra privacy.
+                </p>
+            </div>
 
             {{-- Optional label text field (neighborhood/city) --}}
             <div>
@@ -49,7 +72,7 @@
                     :label="__('Location label (optional)')"
                     type="text"
                     wire:model.defer="location"
-                    :placeholder="__('e.g., Downtown Vancouver')"
+                    :placeholder="__('e.g., Downtown Regina')"
                     autocomplete="address-level2"
                 />
                 @error('location') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
@@ -101,6 +124,13 @@
 
             {{-- Search + category filters --}}
             <div class="grid gap-3">
+
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-3 leading-relaxed">
+                    We use your skills to match you with people who are looking to learn from someone like you —
+                    or who can teach you what you want to learn.
+                    <br><br>
+                    You can update these skills anytime later, and they help improve the accuracy of your match suggestions.
+                </p>
                 <div>
                     <label class="text-sm font-medium">{{ __('Search skills or categories') }}</label>
                     <input

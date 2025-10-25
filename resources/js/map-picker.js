@@ -4,13 +4,13 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Fix marker icon paths when using Vite
-import icon2x from "leaflet/dist/images/marker-icon-2x.png";
-import icon    from "leaflet/dist/images/marker-icon.png";
-import shadow  from "leaflet/dist/images/marker-shadow.png";
+import icon2x from "leaflet/dist/images/marker-icon-2x.png?url";
+import icon   from "leaflet/dist/images/marker-icon.png?url";
+import shadow from "leaflet/dist/images/marker-shadow.png?url";
+
 
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: icon2x,
-    iconUrl: icon,
+
     shadowUrl: shadow,
 });
 
