@@ -18,7 +18,7 @@
                     <flux:navlist.item class="mb-2" icon="plus" :href="route('listings.create')" :current="request()->routeIs('listings.create')" wire:navigate>{{ __('Create listing') }}</flux:navlist.item>
                     <flux:navlist.item class="mb-2" icon="archive-box" :href="route('listings.mine')" :current="request()->routeIs('listings.mine')" wire:navigate>{{ __('My listings') }}</flux:navlist.item>
                     <flux:navlist.item class="mb-2" icon="academic-cap" :href="route('settings.skills')" :current="request()->routeIs('settings.skills')" wire:navigate>{{ __('My skills') }}</flux:navlist.item>
-                    <flux:navlist.item class="mb-2" icon="chat-bubble-left-right" :href="route('listings.create')" :current="request()->routeIs('listings.create')" wire:navigate>{{ __('Chat') }}</flux:navlist.item>
+                    <flux:navlist.item class="mb-2" icon="chat-bubble-left-right" :href="route('chat.index')" :current="request()->routeIs('chat.index')" wire:navigate>{{ __('Chat') }}</flux:navlist.item>
                     <flux:navlist.item class="mb-2" icon="cog-6-tooth" :href="route('profile.edit')" :current="request()->routeIs('profile.edit')" wire:navigate>{{ __('Settings') }}</flux:navlist.item>
 
                 </flux:navlist.group>

@@ -8,14 +8,14 @@
                 <div>
                     <label class="text-sm font-medium">{{ __('Search') }}</label>
                     <input type="text"
-                           class="mt-1 w-full rounded-lg border px-3 py-2"
+                           class="mt-1 w-full rounded-lg border px-3 py-3"
                            placeholder="{{ __('Search by text, desired skill, or user name…') }}"
                            wire:model.live="q" />
                 </div>
 
                 {{-- Category (Dropdown Tree Select) --}}
                 <div class="relative" wire:click.outside="closeTree">
-                    <label class="text-sm font-medium">{{ __('Category') }}</label>
+                    <label class="text-sm font-medium">{{ __('I want to learn') }}</label>
 
                     {{-- The "select box" button --}}
                     <button type="button"
@@ -87,13 +87,14 @@
                         </div>
                     @endif
                 </div>
-
                 {{-- Match my skills --}}
-                <div class="flex items-end">
-                    <label class="inline-flex items-center gap-2 text-sm">
+                {{-- Match my skills --}}
+                <div>
+                    <label class="text-sm font-medium">{{ __('Show listings seeking skills I have') }}</label>
+                    <div class="mt-1 w-full rounded-lg border px-3 py-3 flex items-center gap-2 dark:border-neutral-200">
                         <input type="checkbox" class="rounded" wire:model.live="matchMySkills">
-                        <span>{{ __('Show listings seeking skills I have') }}</span>
-                    </label>
+                        <span class="text-sm">{{ __('Only show matches') }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -101,52 +102,36 @@
         {{-- Cards --}}
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
             @forelse ($listings as $listing)
-                <div class="relative rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-                    <div class="flex items-start gap-4">
-                        {{-- Left: user skills (emoji pills) --}}
-                        <div class="flex min-w-0 flex-1 flex-col gap-2">
+                <div class="relative h-full flex flex-col rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                    {{-- Top content row --}}
+                    <div class="flex items-start gap-4 flex-1">
+                        {{-- Left: skills + text --}}
+                        <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-1.5">
-                                <p class="text-xs text-neutral-500 px-2 py-0.5">
-                                    {{ __('I have skills in :') }}
-                                </p>
+                                <p class="px-2 py-0.5 text-xs text-neutral-500">{{ __('I have skills in :') }}</p>
                                 @foreach ($listing->user->skills as $sk)
                                     <span class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs dark:border-neutral-600">
-                                        <span>{{ $sk->emoji ?? '🧠' }}</span>
-                                        <span class="truncate max-w-[9rem]">{{ $sk->name }}</span>
-                                    </span>
+                                <span>{{ $sk->emoji ?? '🧠' }}</span>
+                                <span class="max-w-[9rem] truncate">{{ $sk->name }}</span>
+                            </span>
                                 @endforeach
                             </div>
 
-                            {{-- Middle: description + desired skill --}}
-                            <div class="space-y-1">
-                                <p class="text-sm text-neutral-800 dark:text-neutral-100">
-                                    {{ $listing->description ?? __('No description provided.') }}
+                            {{-- Short description on card; full is in modal --}}
+                            <div class="mt-2 space-y-1">
+                                <p class="text-sm text-neutral-800 dark:text-neutral-100 line-clamp-2">
+                                    {{ $listing->description }}
                                 </p>
                                 <p class="text-xs text-neutral-500">
                                     {{ __('Wants to learn: ') }}
                                     <span class="font-medium">
-                                        <span class="mr-1">{{ $listing->desiredSkill?->emoji ?? '🧠' }}</span>
-                                        {{ $listing->desiredSkill?->name }}
-                                    </span>
+                                <span class="mr-1">{{ $listing->desiredSkill?->emoji ?? '🧠' }}</span>
+                                {{ $listing->desiredSkill?->name }}
+                            </span>
                                     @if($listing->desiredSkill?->parent)
                                         <span class="text-neutral-400"> · {{ $listing->desiredSkill->parent->name }}</span>
                                     @endif
                                 </p>
-                            </div>
-
-                            {{-- Actions --}}
-                            <div class="mt-3 flex items-center justify-end gap-2">
-                                <button type="button"
-                                        class="rounded-lg border px-3 py-1 text-xs"
-                                        wire:click="openDetails({{ $listing->id }})">
-                                    {{ __('Details') }}
-                                </button>
-
-                                {{-- Chat stub: route can be added later --}}
-                                <a href="#"
-                                   class="rounded-lg bg-zinc-900 px-3 py-1 text-xs font-medium text-white">
-                                    {{ __('Chat') }}
-                                </a>
                             </div>
                         </div>
 
@@ -161,6 +146,20 @@
                                  class="h-12 w-12 rounded-full ring-1 ring-neutral-200 dark:ring-neutral-700">
                         </div>
                     </div>
+
+                    {{-- Bottom actions pinned --}}
+                    <div class="mt-3 flex items-center justify-end gap-2">
+                        <button type="button"
+                                class="rounded-lg border px-3 py-1 text-xs"
+                                wire:click="openDetails({{ $listing->id }})">
+                            {{ __('Details') }}
+                        </button>
+
+                        <a href="{{ route('chat.show', ['user' => $listing->user->id]) }}"
+                           class="rounded-lg bg-zinc-900 px-3 py-1 text-xs font-medium text-white">
+                            {{ __('Chat') }}
+                        </a>
+                    </div>
                 </div>
             @empty
                 <div class="md:col-span-3">
@@ -172,7 +171,6 @@
                 </div>
             @endforelse
         </div>
-
         <div>
             {{ $listings->links() }}
         </div>
@@ -270,7 +268,7 @@
                     <button type="button" class="rounded-lg border px-3 py-2 text-sm" wire:click="closeDetails">
                         {{ __('Close') }}
                     </button>
-                    <a href="#"
+                    <a href="{{ route('chat.show', ['user' => $detail['user_id']]) }}"
                        class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white">
                         {{ __('Chat') }}
                     </a>

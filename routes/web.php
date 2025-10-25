@@ -7,6 +7,9 @@ use App\Livewire\Listings\Index as ListingsIndex;
 use App\Livewire\Listings\Create as ListingsCreate;
 use App\Livewire\Listings\Manage as ListingsManage;
 use App\Livewire\Settings\Skills as SettingsSkills;
+use App\Livewire\Chat\Show as ChatShow;
+use App\Livewire\Chat\Index as ChatIndex;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -21,6 +24,10 @@ Route::middleware(['auth','verified'])->prefix('dashboard')->group(function () {
     Route::get('/listings/create', ListingsCreate::class)->name('listings.create');
     Route::get('/listings/mine', ListingsManage::class)->name('listings.mine');
     Route::get('/settings/skills', SettingsSkills::class)->name('settings.skills');
+    Route::get('/chat/{user}', ChatShow::class)->name('chat.show');
+    Route::get('/chat', ChatIndex::class)->name('chat.index');
+
+
 
 });
 
