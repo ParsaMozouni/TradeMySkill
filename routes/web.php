@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
+use App\Livewire\Listings\Index as ListingsIndex;
+use App\Livewire\Listings\Create as ListingsCreate;
 
 Route::get('/', function () {
     return view('welcome');
@@ -11,6 +13,13 @@ Route::get('/', function () {
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::middleware(['auth','verified'])->group(function () {
+    Route::get('/listings', ListingsIndex::class)->name('listings.index');
+});
+Route::middleware(['auth','verified'])->group(function () {
+    Route::get('/listings/create', ListingsCreate::class)->name('listings.create');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
